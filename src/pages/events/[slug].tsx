@@ -1,7 +1,5 @@
-import Event from "@/components/Event";
 import { prisma } from "@/server/db/client";
 import { TypeSafeEvent } from "@/types/events";
-import { Doctor, Event as EventType } from "@prisma/client";
 
 export async function getStaticPaths() {
   // When this is true (in preview environments) don't
@@ -41,5 +39,22 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 }
 
 export default function EventPage({ event }: { event: TypeSafeEvent }) {
-  return <Event event={event} />;
+  return (
+    <div className="flex h-screen">
+      <div className="m-auto">
+        <div>Title: {event.title}</div>
+        <div>Description: {event.description}</div>
+        <div>Duration: {event.durationMin} minutes</div>
+        <div>Start date: {event.startDate}</div>
+        {event.doctors.length > 0 && (
+          <div>Doctors: {event.doctors.map(({ name }) => name).join(", ")}</div>
+        )}
+        {new Date() > new Date(event.startDate) && (
+          <button className="bg-yellow-400 rounded-md p-2">
+            Subscribe to this event
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
