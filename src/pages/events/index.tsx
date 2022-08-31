@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db/client";
 import EventCardsList from "@/components/EventCardsList";
 import { TypeSafeEvent } from "@/types/events";
+import { useSession } from "next-auth/react";
+import { trpc } from "@/utils/trpc";
 
 export async function getServerSideProps() {
   const events = await prisma.event.findMany({
@@ -19,5 +21,24 @@ export async function getServerSideProps() {
 }
 
 export default function EventsList({ events }: { events: TypeSafeEvent[] }) {
-  return <EventCardsList events={events} />;
+  const { status, data } = useSession();
+  const createEventMutation = trpc.useMutation("admin.create");
+
+  return (
+    <>
+      {data?.user?.name === "admin" && (
+        <button
+          onClick={() => {
+            createEventMutation.mutate(
+              {},
+              { onSuccess(data, variables, context) {} }
+            );
+          }}
+        >
+          Add new event
+        </button>
+      )}
+      <EventCardsList events={events} />
+    </>
+  );
 }

@@ -1,7 +1,7 @@
 import { createRouter } from "./context";
 import { z } from "zod";
 
-export const eventRouter = createRouter()
+export default createRouter()
   .mutation("subscribe", {
     input: z
       .object({

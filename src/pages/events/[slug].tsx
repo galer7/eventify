@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db/client";
 import { TypeSafeEvent } from "@/types/events";
+import { useSession } from "next-auth/react";
 
 export async function getStaticPaths() {
   // When this is true (in preview environments) don't
@@ -39,6 +40,16 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 }
 
 export default function EventPage({ event }: { event: TypeSafeEvent }) {
+  const { status, data } = useSession();
+
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (status === "unauthenticated") {
+    return <p>Access Denied</p>;
+  }
+
   return (
     <div className="flex h-screen">
       <div className="m-auto">
