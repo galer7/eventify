@@ -15,9 +15,8 @@ export const serverSchema = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
   REVALIDATE_SECRET: z.string(),
-  EMAIL_TOPIC_ARN: z.string(),
   AWS_ACCESS_KEY_ID: z.string(),
-  AWS_SECRET_ACCESS_KEY: z.string()
+  AWS_SECRET_ACCESS_KEY: z.string(),
 });
 
 /**

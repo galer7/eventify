@@ -2,6 +2,19 @@ import { createRouter } from "./context";
 import { z } from "zod";
 
 export default createRouter()
+  .mutation("add-phone", {
+    input: z.object({
+      phone: z.string(),
+    }),
+    async resolve({ input, ctx: { prisma, session } }) {
+      if (!session?.user?.id) throw new Error("session user id not found");
+
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { phone: input.phone },
+      });
+    },
+  })
   .mutation("subscribe", {
     input: z
       .object({

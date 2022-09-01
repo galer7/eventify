@@ -6,11 +6,13 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "../../../server/db/client";
 import { env } from "../../../env/server.mjs";
-import { snsClient } from "@/utils/aws";
-import { SubscribeCommand } from "@aws-sdk/client-sns";
+import { NextApiRequest, NextApiResponse } from "next";
+import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 
-export const authOptions: NextAuthOptions = {
-  // Include user.id on session
+export const makeAuthOptions = (
+  req: NextApiRequest,
+  res: NextApiResponse
+): NextAuthOptions => ({
   callbacks: {
     session({ session, user }) {
       if (session.user) {
@@ -18,19 +20,11 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({ user }) {
-      if (!user.email) return true;
+    async redirect({ baseUrl, url }) {
+      console.log("redirect: ", { requrl: req.url, url });
 
-      const params = {
-        Protocol: "email" /* required */,
-        TopicArn: process.env.EMAIL_TOPIC_ARN,
-        Endpoint: user.email,
-      };
-
-      const data = await snsClient.send(new SubscribeCommand(params));
-      console.log("data aws subscribe to email topic", data);
-
-      return true;
+      if (req.url?.includes("signout")) return `${baseUrl}`;
+      return `${baseUrl}/set-phone`;
     },
   },
   // Configure one or more authentication providers
@@ -45,6 +39,9 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-};
+});
 
-export default NextAuth(authOptions);
+export default async function auth(req: NextApiRequest, res: NextApiResponse) {
+  // Do whatever you want here, before the request is passed down to `NextAuth`
+  return await NextAuth(req, res, makeAuthOptions(req, res));
+}
