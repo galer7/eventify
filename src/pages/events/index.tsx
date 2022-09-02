@@ -26,13 +26,13 @@ export default function EventsList({ events }: { events: TypeSafeEvent[] }) {
 
   return (
     <>
-      {data?.user?.name === "admin" && (
+      {data?.user?.role === "admin" && (
         <button
           onClick={() => {
-            createEventMutation.mutate(
-              {},
-              { onSuccess(data, variables, context) {} }
-            );
+            // createEventMutation.mutate(
+            //   {},
+            //   { onSuccess(data, variables, context) {} }
+            // );
           }}
         >
           Add new event

@@ -8,6 +8,7 @@ declare module "next-auth" {
     user?: {
       id: string;
       phone: string;
+      role: "user" | "admin";
     } & DefaultSession["user"];
   }
 }

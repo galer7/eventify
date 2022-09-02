@@ -56,6 +56,7 @@ model User {
     phone         String?
     accounts      Account[]
     sessions      Session[]
+    role          String    @default("user")
 
     events Event[]
 }
@@ -81,6 +82,7 @@ model Event {
     slug        String   @unique
     description String?
     startDate   DateTime
+    endDate     DateTime
     durationMin Int      @default(60)
 
     doctors Doctor[]

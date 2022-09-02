@@ -16,14 +16,45 @@ export default createRouter()
     },
   })
   .mutation("subscribe", {
-    input: z
-      .object({
-        eventSlug: z.string(),
-      })
-      .nullish(),
-    async resolve({ input, ctx: { prisma, session } }) {
+    input: z.object({
+      slug: z.string(),
+    }),
+    async resolve({ input: { slug }, ctx: { prisma, session } }) {
+      const event = await prisma.event.findFirst({ where: { slug } });
+      const userWithConflicts = await prisma.user.findFirst({
+        where: {
+          id: session?.user?.id,
+          events: {
+            some: {
+              startDate: {
+                lt: event?.endDate,
+              },
+              endDate: {
+                gt: event?.startDate,
+              },
+            },
+          },
+        },
+        include: {
+          events: {
+            where: {
+              startDate: {
+                lt: event?.endDate,
+              },
+              endDate: {
+                gt: event?.startDate,
+              },
+            },
+          },
+        },
+      });
+
+      if (userWithConflicts) {
+        return userWithConflicts;
+      }
+
       await prisma.event.update({
-        where: { slug: input?.eventSlug },
+        where: { slug },
         data: {
           users: {
             connect: {
@@ -37,12 +68,12 @@ export default createRouter()
   .mutation("unsubscribe", {
     input: z
       .object({
-        eventSlug: z.string(),
+        slug: z.string(),
       })
       .nullish(),
     async resolve({ input, ctx: { prisma, session } }) {
       await prisma.event.update({
-        where: { slug: input?.eventSlug },
+        where: { slug: input?.slug },
         data: {
           users: {
             disconnect: {

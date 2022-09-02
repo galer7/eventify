@@ -1,6 +1,11 @@
 import { prisma } from "@/server/db/client";
 import { TypeSafeEvent } from "@/types/events";
+import { trpc } from "@/utils/trpc";
+import { Event } from "@prisma/client";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { ToastContainer, toast, ToastPosition } from "react-toastify";
 
 export async function getStaticPaths() {
   // When this is true (in preview environments) don't
@@ -40,15 +45,32 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 }
 
 export default function EventPage({ event }: { event: TypeSafeEvent }) {
-  const { status, data } = useSession();
+  const { data } = useSession();
+  const router = useRouter();
+  const deleteEventMutation = trpc.useMutation("admin.delete");
+  const subscribeMutation = trpc.useMutation("user.subscribe");
+  const toastOpts = {
+    position: "bottom-right" as ToastPosition,
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    progress: undefined,
+  };
 
-  if (status === "loading") {
-    return <p>Loading...</p>;
-  }
-
-  if (status === "unauthenticated") {
-    return <p>Access Denied</p>;
-  }
+  const toastWithEventsLinks = (events: Event[]) => (
+    <div>
+      {`You cannot subscribe to this event ` +
+        `because you have conflicts with these events: ` +
+        `${events
+          .map((event) => (
+            <Link key={event.slug} href={`/events/${event.slug}`}>
+              {event.title}
+            </Link>
+          ))
+          .join(", ")}`}
+    </div>
+  );
 
   return (
     <div className="flex h-screen">
@@ -61,11 +83,66 @@ export default function EventPage({ event }: { event: TypeSafeEvent }) {
           <div>Doctors: {event.doctors.map(({ name }) => name).join(", ")}</div>
         )}
         {new Date() > new Date(event.startDate) && (
-          <button className="bg-yellow-400 rounded-md p-2">
+          <button
+            className="bg-yellow-400 rounded-md p-2"
+            onClick={() => {
+              subscribeMutation.mutate(
+                { slug: event.slug },
+                {
+                  onSuccess(data) {
+                    console.log("subscribe mutation returned data", { data });
+                    if (data?.events) {
+                      toast.error(toastWithEventsLinks(data.events), toastOpts);
+                    } else {
+                      toast.success(
+                        `You've successfully subscribed to \"${event.title}\"!`,
+                        toastOpts
+                      );
+                    }
+                  },
+                }
+              );
+            }}
+          >
             Subscribe to this event
           </button>
         )}
       </div>
+      {data?.user && data?.user.role === "admin" && (
+        <div>
+          <button
+            onClick={() => {
+              deleteEventMutation.mutate(
+                { slug: event.slug },
+                {
+                  onSuccess(data, variables, context) {
+                    toast.success(
+                      `Event "${event.slug} deleted successfully! You will be redirected to the events page soon..."`,
+                      {
+                        ...toastOpts,
+                        onClose: () => router.push("/events"),
+                      }
+                    );
+                  },
+                }
+              );
+            }}
+          >
+            Delete event
+          </button>
+        </div>
+      )}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }
