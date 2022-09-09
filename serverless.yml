@@ -1,0 +1,26 @@
+org: galer7
+app: aws-node-project
+service: aws-node-project
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: development
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: '*'
+
+functions:
+  hello:
+    handler: handler.hello
+
+plugins:
+  - serverless-esbuild
