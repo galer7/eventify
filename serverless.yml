@@ -21,6 +21,7 @@ provider:
 functions:
   hello:
     handler: handler.hello
-
-plugins:
-  - serverless-esbuild
+    events:
+      - httpApi:
+          path: /
+          method: post

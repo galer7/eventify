@@ -5,11 +5,14 @@ import {
   SendEmailCommand,
   BadRequestException,
 } from "@aws-sdk/client-sesv2";
+import { SNSClient, CreateTopicCommand } from "@aws-sdk/client-sns";
 
 export async function hello(event: APIGatewayEvent) {
+  const {} = event;
   const sesClient = new SESv2Client({ region: "us-east-1" });
+  const snsClient = new SNSClient({ region: "us-east-1" });
 
-  const params: SendEmailRequest = {
+  const sendEmailCommand = new SendEmailCommand({
     Destination: {
       ToAddresses: ["gabriel.galer@protonmail.com"],
     },
@@ -26,14 +29,13 @@ export async function hello(event: APIGatewayEvent) {
         },
       },
     },
-  };
+  } as SendEmailRequest);
 
-  const sendEmailCommand = new SendEmailCommand(params);
+  //   const sendSmsCommand = new
 
   let data;
   try {
     data = await sesClient.send(sendEmailCommand);
-    console.log({ data });
   } catch (error: unknown) {
     if (error instanceof BadRequestException) {
       const { requestId, cfId, extendedRequestId } = error.$metadata;
@@ -44,7 +46,6 @@ export async function hello(event: APIGatewayEvent) {
   }
 
   return {
-    message: "Go Serverless v3! Your function executed successfully!",
     input: event,
     data,
   };
