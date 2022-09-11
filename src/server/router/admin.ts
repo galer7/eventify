@@ -1,7 +1,10 @@
 import { createRouter } from "./context";
 import { z } from "zod";
-import { add } from "date-fns";
+import { add, subMinutes } from "date-fns";
 import { convertToSlug } from "@/utils/fns";
+import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
+
+const sfnClient = new SFNClient({ region: "us-east-1" });
 
 export default createRouter()
   .mutation("create", {
@@ -25,6 +28,13 @@ export default createRouter()
           slug: convertToSlug(title),
         },
       });
+
+      const waitBeforeReminderCommand = new StartExecutionCommand({
+        input: JSON.stringify({
+          expirydate: subMinutes(startDate, 30).toISOString(),
+        }),
+        stateMachineArn: "",
+      });
     },
   })
   .mutation("delete", {
@@ -34,6 +44,8 @@ export default createRouter()
     async resolve({ input: { slug }, ctx: { prisma } }) {
       // TODO: check if all users subscribed to this event are disconnected by prisma
       await prisma.event.delete({ where: { slug } });
+
+      // TODO: delete SNS topic with event slug
     },
   })
   .mutation("kick", {

@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda";
 import {
   SESv2Client,
   SendEmailRequest,
@@ -7,8 +7,10 @@ import {
 } from "@aws-sdk/client-sesv2";
 import { SNSClient, CreateTopicCommand } from "@aws-sdk/client-sns";
 
-export async function hello(event: APIGatewayEvent) {
-  const {} = event;
+export async function sendReminder(
+  event: APIGatewayEvent,
+  context: APIGatewayEventRequestContext
+) {
   const sesClient = new SESv2Client({ region: "us-east-1" });
   const snsClient = new SNSClient({ region: "us-east-1" });
 
@@ -33,9 +35,8 @@ export async function hello(event: APIGatewayEvent) {
 
   //   const sendSmsCommand = new
 
-  let data;
   try {
-    data = await sesClient.send(sendEmailCommand);
+    await sesClient.send(sendEmailCommand);
   } catch (error: unknown) {
     if (error instanceof BadRequestException) {
       const { requestId, cfId, extendedRequestId } = error.$metadata;
@@ -46,7 +47,7 @@ export async function hello(event: APIGatewayEvent) {
   }
 
   return {
-    input: event,
-    data,
+    statusCode: 200,
+    body: JSON.stringify({ event, context }),
   };
 }

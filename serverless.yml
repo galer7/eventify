@@ -6,7 +6,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
   stage: development
   region: us-east-1
   iam:
@@ -18,10 +18,39 @@ provider:
             - ses:SendRawEmail
           Resource: '*'
 
+stepFunctions:
+  stateMachines:
+    reminderMachine:
+      definition:
+        StartAt: FirstState
+        States:
+          FirstState:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [sendReminder, Arn]
+            Next: wait_using_timestamp_path
+          wait_using_timestamp_path:
+            Type: Wait
+            TimestampPath: "$.expirydate"
+            Next: FinalState
+          FinalState:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [sendReminder, Arn]
+            End: true
+      events:
+        - http:
+            path: /set-reminder
+            method: post
+
 functions:
-  hello:
-    handler: handler.hello
+  sendReminder:
+    handler: handler.sendReminder
     events:
-      - httpApi:
-          path: /
+      - http:
+          path: /send-reminder
           method: post
+
+plugins:
+  - serverless-bundle
+  - serverless-step-functions

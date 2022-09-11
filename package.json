@@ -2,6 +2,8 @@
   "name": "eventify",
   "version": "0.1.0",
   "private": true,
+  "author": "Gabriel Galer <gabriel.galer@protonmail.com>",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,6 +12,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-sfn": "^3.168.0",
     "@next-auth/prisma-adapter": "^1.0.4",
     "@prisma/client": "^4.2.1",
     "@trpc/client": "^9.27.2",
@@ -44,6 +47,8 @@
     "eslint-config-next": "12.2.5",
     "postcss": "^8.4.16",
     "prisma": "^4.2.1",
+    "serverless-bundle": "^5.5.0",
+    "serverless-step-functions": "^3.8.0",
     "tailwindcss": "^3.1.8",
     "typescript": "4.7.4"
   },
