@@ -2,7 +2,11 @@ import { createRouter } from "./context";
 import { z } from "zod";
 import { add, subMinutes } from "date-fns";
 import { convertToSlug } from "@/utils/fns";
-import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn";
+import {
+  SFNClient,
+  StopExecutionCommand,
+  StartExecutionCommand,
+} from "@aws-sdk/client-sfn";
 
 const sfnClient = new SFNClient({ region: "us-east-1" });
 
@@ -18,23 +22,32 @@ export default createRouter()
       input: { title, description, startDate, durationMin },
       ctx: { prisma },
     }) {
-      await prisma.event.create({
-        data: {
-          title,
-          description,
-          startDate,
-          endDate: add(startDate, { minutes: durationMin }),
-          durationMin,
-          slug: convertToSlug(title),
-        },
-      });
-
       const waitBeforeReminderCommand = new StartExecutionCommand({
         input: JSON.stringify({
           expirydate: subMinutes(startDate, 30).toISOString(),
         }),
-        stateMachineArn: "",
+        stateMachineArn: process.env.REMINDER_SFN_ARN,
       });
+
+      try {
+        const { executionArn } = await sfnClient.send(
+          waitBeforeReminderCommand
+        );
+
+        await prisma.event.create({
+          data: {
+            title,
+            description,
+            startDate,
+            endDate: add(startDate, { minutes: durationMin }),
+            durationMin,
+            slug: convertToSlug(title),
+            executionArn,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
     },
   })
   .mutation("delete", {
@@ -43,9 +56,18 @@ export default createRouter()
     }),
     async resolve({ input: { slug }, ctx: { prisma } }) {
       // TODO: check if all users subscribed to this event are disconnected by prisma
-      await prisma.event.delete({ where: { slug } });
+      const { executionArn } = await prisma.event.delete({ where: { slug } });
+      if (!executionArn) return;
 
-      // TODO: delete SNS topic with event slug
+      const stopExecutionCommand = new StopExecutionCommand({
+        executionArn: executionArn,
+      });
+
+      try {
+        await sfnClient.send(stopExecutionCommand);
+      } catch (error) {
+        console.error(error);
+      }
     },
   })
   .mutation("kick", {

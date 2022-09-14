@@ -5,14 +5,12 @@ import {
   SendEmailCommand,
   BadRequestException,
 } from "@aws-sdk/client-sesv2";
-import { SNSClient, CreateTopicCommand } from "@aws-sdk/client-sns";
 
 export async function sendReminder(
   event: APIGatewayEvent,
   context: APIGatewayEventRequestContext
 ) {
   const sesClient = new SESv2Client({ region: "us-east-1" });
-  const snsClient = new SNSClient({ region: "us-east-1" });
 
   const sendEmailCommand = new SendEmailCommand({
     Destination: {
@@ -32,8 +30,6 @@ export async function sendReminder(
       },
     },
   } as SendEmailRequest);
-
-  //   const sendSmsCommand = new
 
   try {
     await sesClient.send(sendEmailCommand);

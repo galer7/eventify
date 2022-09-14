@@ -16,6 +16,11 @@ use SES for emails, SNS for sms
   - [x] add 'delete event' button on `/events/[slug]` page
   - [ ] add 'X' button button on `/events` page
   - [ ] render subscribed users on `/events/[slug]` page
+- [ ] aws
+  - [ ] deploy lambda
+  - [ ] deploy sfn
+  - [ ] make sfn trigger lambda with wait state from input
+  - [ ] 
 
 # References
 1. https://aws.plainenglish.io/send-an-email-notification-using-aws-lambda-c7a24751e969

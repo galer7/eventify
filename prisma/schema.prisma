@@ -77,13 +77,14 @@ model Doctor {
 }
 
 model Event {
-    id          Int      @id @default(autoincrement())
-    title       String   @unique
-    slug        String   @unique
-    description String?
-    startDate   DateTime
-    endDate     DateTime
-    durationMin Int      @default(60)
+    id           Int      @id @default(autoincrement())
+    title        String   @unique
+    slug         String   @unique
+    description  String?
+    startDate    DateTime
+    endDate      DateTime
+    durationMin  Int      @default(60)
+    executionArn String?  @unique
 
     doctors Doctor[]
     users   User[]

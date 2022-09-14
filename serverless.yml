@@ -22,18 +22,13 @@ stepFunctions:
   stateMachines:
     reminderMachine:
       definition:
-        StartAt: FirstState
+        StartAt: Delay
         States:
-          FirstState:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [sendReminder, Arn]
-            Next: wait_using_timestamp_path
-          wait_using_timestamp_path:
+          Delay:
             Type: Wait
             TimestampPath: "$.expirydate"
-            Next: FinalState
-          FinalState:
+            Next: TriggerLambda
+          TriggerLambda:
             Type: Task
             Resource:
               Fn::GetAtt: [sendReminder, Arn]
@@ -45,7 +40,7 @@ stepFunctions:
 
 functions:
   sendReminder:
-    handler: handler.sendReminder
+    handler: aws/handler.sendReminder
     events:
       - http:
           path: /send-reminder
@@ -54,3 +49,7 @@ functions:
 plugins:
   - serverless-bundle
   - serverless-step-functions
+
+custom:
+  serverlessPluginTypescript:
+    tsConfigFileLocation: './aws/tsconfig.json'
