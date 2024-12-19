@@ -45,7 +45,7 @@
     "aws-lambda": "^1.0.7",
     "eslint": "8.22.0",
     "eslint-config-next": "12.2.5",
-    "postcss": "^8.4.16",
+    "postcss": "^8.4.31",
     "prisma": "^4.2.1",
     "serverless-bundle": "^6.3.1",
     "serverless-step-functions": "^3.8.0",
